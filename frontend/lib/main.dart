@@ -1,10 +1,16 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:eventss/succes_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import 'decorations.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
+
+  await Firebase.initializeApp();
 }
 
 class MyApp extends StatelessWidget {
@@ -12,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Eventss',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -36,11 +42,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _isLoading = false;
+
+  FirebaseFunctions functions = FirebaseFunctions.instance;
   final form = FormGroup({
-    'firstName': FormControl<String>(
+    'first_name': FormControl<String>(
       validators: [Validators.required],
     ),
-    'lastName': FormControl<String>(
+    'last_name': FormControl<String>(
       validators: [Validators.required],
     ),
     'email': FormControl<String>(validators: [
@@ -52,7 +61,42 @@ class _MyHomePageState extends State<MyHomePage> {
     ),
   });
 
-  void _onSubmit(FormGroup form) {}
+  Future<void> register(NewUser user) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      HttpsCallable callable = functions.httpsCallable('createUser');
+      final res = await callable(
+        NewUser(
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                phoneNumber: user.phoneNumber)
+            .toJson(),
+      );
+    } catch (e) {
+      rethrow;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _onSubmit(FormGroup form) async {
+    await register(
+      NewUser(
+        firstName: form.value['first_name'] as String,
+        lastName: form.value['last_name'] as String,
+        email: form.value['email'] as String,
+        phoneNumber: form.value['phone_number'] as String,
+      ),
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => SuccessPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       textAlign: TextAlign.center,
                     ),
                     ReactiveTextField(
-                      formControlName: 'firstName',
+                      formControlName: 'first_name',
                       textInputAction: TextInputAction.next,
                       onSubmitted: () => form.focus('lastName'),
                       validationMessages: (control) => {
@@ -91,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     ReactiveTextField(
-                      formControlName: 'lastName',
+                      formControlName: 'last_name',
                       textInputAction: TextInputAction.next,
                       onSubmitted: () => form.focus('email'),
                       validationMessages: (control) =>
@@ -154,22 +198,27 @@ class _MyHomePageState extends State<MyHomePage> {
                             backgroundColor: MaterialStateProperty.resolveWith(
                               (states) {
                                 if (states.contains(MaterialState.disabled)) {
-                                  return Colors.amber;
+                                  return Colors.amber.withOpacity(0.38);
                                 } else
-                                  return Colors.amberAccent;
+                                  return Colors.amber;
                               },
                             ),
                             foregroundColor: MaterialStateProperty.resolveWith(
                               (states) {
                                 if (states.contains(MaterialState.disabled)) {
-                                  return Colors.yellow;
+                                  return Colors.white54;
                                 } else
-                                  return Colors.yellowAccent;
+                                  return Colors.white;
                               },
                             ),
                           ),
                           onPressed: form.valid ? () => _onSubmit(form) : null,
-                          child: Text('Register'),
+                          child: _isLoading
+                              ? CircularProgressIndicator.adaptive()
+                              : Text(
+                                  'Register',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                         );
                       },
                     ),
@@ -181,5 +230,28 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+}
+
+class NewUser {
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String phoneNumber;
+
+  NewUser({
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.phoneNumber,
+  });
+
+  Map<String, Object?> toJson() {
+    return {
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phoneNumber': phoneNumber,
+    };
   }
 }
