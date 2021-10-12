@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -26,7 +27,26 @@
   <title>eventss</title>
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-functions.js"></script>
+
+  <!-- Firebase Configuration -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWtx2z7-MOCI0yLVHfa_-KMzVKNGh7wUo",
+      authDomain: "eventss-bc1a2.firebaseapp.com",
+      projectId: "eventss-bc1a2",
+      storageBucket: "eventss-bc1a2.appspot.com",
+      messagingSenderId: "557267988123",
+      appId: "1:557267988123:web:a95402d7f3b5f78b46e03e"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
   <!-- This script installs service_worker.js to provide PWA functionality to
        application. For more information, see:
        https://developers.google.com/web/fundamentals/primers/service-workers -->
@@ -95,4 +115,5 @@
     }
   </script>
 </body>
+
 </html>
