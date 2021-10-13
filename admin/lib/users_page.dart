@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class UsersPage extends StatefulWidget {
   UsersPage({Key? key}) : super(key: key);
@@ -9,9 +10,27 @@ class UsersPage extends StatefulWidget {
 }
 
 class _UsersPageState extends State<UsersPage> {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  bool _isLoading = false;
+  FirebaseFunctions functions = FirebaseFunctions.instance;
+
   final Stream<QuerySnapshot> _usersStream =
       FirebaseFirestore.instance.collection('users').snapshots();
+
+  Future<void> approveRegistration(String id, String email) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      HttpsCallable callable = functions.httpsCallable('approveRegistration');
+      await callable({'id': id, 'email': email});
+    } catch (e) {
+      rethrow;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +54,7 @@ class _UsersPageState extends State<UsersPage> {
               lastName: data['lastName'],
               email: data['email'],
               phoneNumber: data['phoneNumber'],
-              approved: data['approved'],
+              approvalStatus: data['approvalStatus'],
             );
           }).toList();
           return ListView.separated(
@@ -53,7 +72,7 @@ class _UsersPageState extends State<UsersPage> {
                     SizedBox(width: 15),
                     Text('Phone Number'),
                     SizedBox(width: 15),
-                    Text('Approved')
+                    Text('Approval Status')
                   ],
                 );
               }
@@ -85,20 +104,26 @@ class _UsersPageState extends State<UsersPage> {
                       fit: FlexFit.loose,
                       child: Row(
                         children: [
-                          Text(users[index].approved.toString()),
+                          Text(users[index].approvalStatus),
                           PopupMenuButton<String>(
                             icon: Icon(Icons.more_vert),
                             itemBuilder: (context) {
                               return [
                                 const PopupMenuItem<String>(
-                                  value: 'approve',
+                                  value: 'Approved',
                                   child: Text('Approve'),
                                 ),
                                 const PopupMenuItem<String>(
-                                  value: 'deny',
+                                  value: 'Denied',
                                   child: Text('Deny'),
                                 ),
                               ];
+                            },
+                            onSelected: (value) async {
+                              await approveRegistration(
+                                users[index].id,
+                                users[index].email,
+                              );
                             },
                           ),
                         ],
@@ -123,7 +148,7 @@ class User {
   final String lastName;
   final String email;
   final String phoneNumber;
-  final bool approved;
+  final String approvalStatus;
 
   User({
     required this.id,
@@ -131,6 +156,6 @@ class User {
     required this.lastName,
     required this.email,
     required this.phoneNumber,
-    required this.approved,
+    required this.approvalStatus,
   });
 }
