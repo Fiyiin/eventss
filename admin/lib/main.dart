@@ -1,6 +1,5 @@
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:eventss/decorations.dart';
-import 'package:eventss/succes_page.dart';
+import 'package:admin/decorations.dart';
+import 'package:admin/users_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -17,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Eventss',
+      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -32,60 +31,25 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool _isLoading = false;
-
-  FirebaseFunctions functions = FirebaseFunctions.instance;
   final form = FormGroup({
-    'first_name': FormControl<String>(
-      validators: [Validators.required],
-    ),
-    'last_name': FormControl<String>(
-      validators: [Validators.required],
-    ),
     'email': FormControl<String>(validators: [
       Validators.email,
       Validators.required,
     ]),
-    'phone_number': FormControl<String>(
-      validators: [Validators.required, Validators.number],
+    'password': FormControl<String>(
+      validators: [Validators.required],
     ),
   });
 
-  Future<void> register(NewUser user) async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      HttpsCallable callable = functions.httpsCallable('createUser');
-      await callable(
-        NewUser(
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                phoneNumber: user.phoneNumber)
-            .toJson(),
-      );
-    } catch (e) {
-      rethrow;
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   Future<void> _onSubmit(FormGroup form) async {
-    await register(
-      NewUser(
-        firstName: form.value['first_name'] as String,
-        lastName: form.value['last_name'] as String,
-        email: form.value['email'] as String,
-        phoneNumber: form.value['phone_number'] as String,
-      ),
-    );
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => SuccessPage()),
-    );
+    final email = form.value['email'] as String;
+    final password = form.value['password'] as String;
+
+    if (email.isNotEmpty && password == 'admin') {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => UsersPage()),
+      );
+    }
   }
 
   @override
@@ -103,42 +67,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Register for event',
+                      'Admin Login',
                       style: TextStyle(fontSize: 26),
                       textAlign: TextAlign.center,
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'first_name',
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: () => form.focus('lastName'),
-                      validationMessages: (control) => {
-                        ValidationMessage.required: 'First name is required'
-                      },
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'First Name',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('firstName').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
-                        ),
-                      ),
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'last_name',
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: () => form.focus('email'),
-                      validationMessages: (control) =>
-                          {ValidationMessage.required: 'Last name is required'},
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Last Name',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('lastName').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
-                        ),
-                      ),
                     ),
                     ReactiveTextField(
                       formControlName: 'email',
@@ -158,17 +89,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     ReactiveTextField(
-                      formControlName: 'phone_number',
+                      formControlName: 'password',
                       textInputAction: TextInputAction.done,
-                      keyboardType: TextInputType.phone,
-                      validationMessages: (control) => {
-                        ValidationMessage.required: 'Phone number is required'
-                      },
+                      obscureText: true,
+                      validationMessages: (control) =>
+                          {ValidationMessage.required: 'Password is required'},
                       decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Phone Number',
+                        labelText: 'Password',
                         suffixIcon: IconButton(
                           onPressed: () {
-                            form.control('phone_number').updateValue('');
+                            form.control('password').updateValue('');
                           },
                           icon: Icon(Icons.close, size: 20),
                         ),
@@ -203,12 +133,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                           onPressed: form.valid ? () => _onSubmit(form) : null,
-                          child: _isLoading
-                              ? CircularProgressIndicator.adaptive()
-                              : Text(
-                                  'Register',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                          child: Text(
+                            'Login',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         );
                       },
                     ),
@@ -220,28 +148,5 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
-  }
-}
-
-class NewUser {
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String phoneNumber;
-
-  NewUser({
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.phoneNumber,
-  });
-
-  Map<String, Object?> toJson() {
-    return {
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'phoneNumber': phoneNumber,
-    };
   }
 }
