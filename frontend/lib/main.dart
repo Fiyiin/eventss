@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:eventss/decorations.dart';
 import 'package:eventss/succes_page.dart';
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Eventss',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.amber,
       ),
       home: MyHomePage(),
     );
@@ -32,6 +33,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  CollectionReference eventsRef =
+      FirebaseFirestore.instance.collection('events');
   bool _isLoading = false;
 
   FirebaseFunctions functions = FirebaseFunctions.instance;
@@ -49,6 +52,9 @@ class _MyHomePageState extends State<MyHomePage> {
     'phone_number': FormControl<String>(
       validators: [Validators.required, Validators.number],
     ),
+    'event': FormControl<Event>(
+      validators: [Validators.required],
+    ),
   });
 
   Future<void> register(NewUser user) async {
@@ -59,11 +65,12 @@ class _MyHomePageState extends State<MyHomePage> {
       HttpsCallable callable = functions.httpsCallable('createUser');
       await callable(
         NewUser(
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                phoneNumber: user.phoneNumber)
-            .toJson(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          eventId: user.eventId,
+        ).toJson(),
       );
     } catch (e) {
       rethrow;
@@ -81,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
         lastName: form.value['last_name'] as String,
         email: form.value['email'] as String,
         phoneNumber: form.value['phone_number'] as String,
+        eventId: (form.value['event'] as Event).id,
       ),
     );
     Navigator.of(context).push(
@@ -93,6 +101,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return LayoutBuilder(
       builder: (context, constraint) {
         return Scaffold(
+          appBar: AppBar(
+            title: Text('Eventss'),
+          ),
           body: SingleChildScrollView(
             child: ReactiveFormBuilder(
               form: () => form,
@@ -103,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Register for event',
+                      'Register for an event',
                       style: TextStyle(fontSize: 26),
                       textAlign: TextAlign.center,
                     ),
@@ -174,6 +185,45 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                     ),
+                    FutureBuilder(
+                      future: eventsRef.get(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Couldn\'t fetch events'));
+                        }
+
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: Text("Loading..."));
+                        }
+                        final events = snapshot.data!.docs
+                            .map(
+                              (DocumentSnapshot document) => Event(
+                                document.id,
+                                (document.data()!
+                                    as Map<String, dynamic>)['name'],
+                              ),
+                            )
+                            .toList();
+                        return ReactiveDropdownField(
+                          formControlName: 'event',
+                          validationMessages: (control) => {
+                            ValidationMessage.required: 'this a required field'
+                          },
+                          items: events.map<DropdownMenuItem<Event>>((value) {
+                            return DropdownMenuItem(
+                              child: Text(value.name),
+                              value: value,
+                            );
+                          }).toList(),
+                          decoration: Decorations.formInputDecoration.copyWith(
+                            labelText: 'Events',
+                            hintText: 'Select Event',
+                          ),
+                        );
+                      },
+                    ),
                     ReactiveFormConsumer(
                       builder: (context, form, child) {
                         return TextButton(
@@ -228,12 +278,14 @@ class NewUser {
   final String lastName;
   final String email;
   final String phoneNumber;
+  final String eventId;
 
   NewUser({
     required this.firstName,
     required this.lastName,
     required this.email,
     required this.phoneNumber,
+    required this.eventId,
   });
 
   Map<String, Object?> toJson() {
@@ -242,6 +294,14 @@ class NewUser {
       'lastName': lastName,
       'email': email,
       'phoneNumber': phoneNumber,
+      'eventId': eventId,
     };
   }
+}
+
+class Event {
+  final String id;
+  final String name;
+
+  Event(this.id, this.name);
 }

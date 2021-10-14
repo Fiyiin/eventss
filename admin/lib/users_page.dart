@@ -10,19 +10,82 @@ class UsersPage extends StatefulWidget {
 }
 
 class _UsersPageState extends State<UsersPage> {
+  String valueText = '';
   bool _isLoading = false;
   FirebaseFunctions functions = FirebaseFunctions.instance;
 
   final Stream<QuerySnapshot> _usersStream =
       FirebaseFirestore.instance.collection('users').snapshots();
+  TextEditingController _textFieldController = TextEditingController();
 
-  Future<void> approveRegistration(String id, String email) async {
+  Future<void> _displayTextInputDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Create Event'),
+          content: TextField(
+            onChanged: (value) {
+              setState(() {
+                valueText = value;
+              });
+            },
+            decoration: InputDecoration(hintText: 'Event name'),
+            controller: _textFieldController,
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                primary: Colors.red,
+              ),
+              child: Text('CANCEL'),
+              onPressed: () {
+                setState(() {
+                  Navigator.pop(context);
+                });
+              },
+            ),
+            TextButton(
+              child: Text('OK'),
+              onPressed: () async {
+                if (valueText.isNotEmpty) {
+                  await createEvent(valueText);
+                }
+                setState(() {
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> approveRegistration(
+      String id, String email, String approval) async {
     try {
       setState(() {
         _isLoading = true;
       });
       HttpsCallable callable = functions.httpsCallable('approveRegistration');
-      await callable({'id': id, 'email': email});
+      await callable({'id': id, 'email': email, 'approvalStatus': approval});
+    } catch (e) {
+      rethrow;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> createEvent(String eventNane) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      HttpsCallable callable = functions.httpsCallable('createEvent');
+      await callable({'name': eventNane});
     } catch (e) {
       rethrow;
     } finally {
@@ -35,6 +98,21 @@ class _UsersPageState extends State<UsersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Manage Users'),
+        actions: [
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.all(16.0),
+              primary: Colors.white,
+              textStyle: const TextStyle(fontSize: 20),
+            ),
+            onPressed: () => _displayTextInputDialog(context),
+            icon: Icon(Icons.create),
+            label: Text('Create Event'),
+          )
+        ],
+      ),
       body: StreamBuilder(
         stream: _usersStream,
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -123,6 +201,7 @@ class _UsersPageState extends State<UsersPage> {
                               await approveRegistration(
                                 users[index].id,
                                 users[index].email,
+                                value,
                               );
                             },
                           ),

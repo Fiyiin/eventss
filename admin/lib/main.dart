@@ -16,9 +16,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Eventss',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.amber,
       ),
       home: MyHomePage(),
     );
@@ -46,8 +46,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final password = form.value['password'] as String;
 
     if (email.isNotEmpty && password == 'admin') {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => UsersPage()),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => UsersPage(),
+        ),
       );
     }
   }
@@ -57,6 +59,13 @@ class _MyHomePageState extends State<MyHomePage> {
     return LayoutBuilder(
       builder: (context, constraint) {
         return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'Admin Login',
+              style: TextStyle(fontSize: 26),
+              textAlign: TextAlign.center,
+            ),
+          ),
           body: SingleChildScrollView(
             child: ReactiveFormBuilder(
               form: () => form,
@@ -66,11 +75,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text(
-                      'Admin Login',
-                      style: TextStyle(fontSize: 26),
-                      textAlign: TextAlign.center,
-                    ),
                     ReactiveTextField(
                       formControlName: 'email',
                       textInputAction: TextInputAction.next,

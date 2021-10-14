@@ -26,43 +26,64 @@ async function sendEmail(email: string, subject: string, contentPlain: string, c
 }
 
 export const createUser = functions.https.onCall(async (data, context) => {
-  functions.logger.info("createUser logs!", { structuredData: true });
-
   try {
     await admin.firestore().collection("users").add({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
       phoneNumber: data.phoneNumber,
-      approvalStatus: 'Pending',
+      approvalStatus: "Pending",
     });
+
     sendEmail(data.email, "Eventss Registration", "Thank you for registering on Eventss, your registration is pending review. Expect a follow-up email when our review is complete", "<b>Thank you for registering on Eventss, your registration is pending review. </b><b>Expect a follow-up email when our review is complete</b>");
+
+    await admin.firestore().collection("events").doc(data.eventId).update({
+      registered_users: admin.firestore.FieldValue.increment(1),
+    });
+
     return ({
       message: `User with ID: ${data.id} added`,
       error: false, data: data,
     });
   } catch (error) {
-    return ({ message: error, error: true });
+    return ({message: error, error: true});
   }
 });
 
 export const approveRegistration = functions.https.onCall(async (data, context) => {
-
+  functions.logger.info("approve logs!", {structuredData: true});
   try {
     await admin.firestore().collection("users").doc(data.id).update({
-      approved: data.approval,
+      approvalStatus: data.approvalStatus,
     });
-    if (data.approval == false) {
+    if (data.approvalStatus == "Denied") {
       sendEmail(data.email, "Eventss Registration", "Thank you for registering on Eventss, your registration has been denied", "<b>Thank you for registering on Eventss, your registration has been denied </b>");
     } else {
       sendEmail(data.email, "Eventss Registration", "Thank you for registering on Eventss, your registration has been approved.", "<b>Thank you for registering on Eventss, your registration is has been approved.");
     }
 
     return ({
-      message: `registration confirmed`,
+      message: "registration confirmed",
       error: false, data: data,
     });
   } catch (error) {
-    return ({ message: error, error: true });
+    return ({message: error, error: true});
+  }
+});
+
+export const createEvent = functions.https.onCall(async (data, context) => {
+  try {
+    await admin.firestore().collection("events").add({
+      name: data.name,
+      registered_users: 0,
+      checked_in_users: 0,
+    });
+
+    return ({
+      message: "event created",
+      error: false, data: data,
+    });
+  } catch (error) {
+    return ({message: error, error: true});
   }
 });
