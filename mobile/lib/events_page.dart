@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:mobile/main.dart';
 
 class EventsPage extends StatefulWidget {
@@ -60,6 +62,7 @@ class _EventsPageState extends State<EventsPage> {
                           builder: (context) => EventDetailScreen(
                             event: Event(
                               data['name'],
+                              document.id,
                               data['registered_users'],
                               data['checked_in_users'],
                             ),
@@ -82,23 +85,48 @@ class _EventsPageState extends State<EventsPage> {
 
 class Event {
   final String name;
+  final String id;
   final int registeredUsers;
   final int checkedInUsers;
 
-  Event(this.name, this.registeredUsers, this.checkedInUsers);
+  Event(this.name, this.id, this.registeredUsers, this.checkedInUsers);
 }
 
-class EventDetailScreen extends StatelessWidget {
+class EventDetailScreen extends StatefulWidget {
   const EventDetailScreen({Key? key, required this.event}) : super(key: key);
 
   final Event event;
+
+  @override
+  _EventDetailScreenState createState() => _EventDetailScreenState();
+}
+
+class _EventDetailScreenState extends State<EventDetailScreen> {
+  FirebaseFunctions functions = FirebaseFunctions.instance;
+  bool _isLoading = false;
+
+  Future<void> checkIn(String eventId) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      HttpsCallable callable = functions.httpsCallable('checkInUser');
+      await callable({'eventId': eventId});
+    } catch (e) {
+      rethrow;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     // Use the Todo to create the UI.
     return Scaffold(
       appBar: AppBar(
-        title: Text(event.name),
+        title: Text(widget.event.name),
       ),
       body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -107,12 +135,29 @@ class EventDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ListTile(
-                title: Text('Total Registered Users: ${event.registeredUsers}'),
-                subtitle: Text('Checked In Users: ${event.checkedInUsers}'),
+                title: Text(
+                    'Total Registered Users: ${widget.event.registeredUsers}'),
+                subtitle:
+                    Text('Checked In Users: ${widget.event.checkedInUsers}'),
               ),
               ElevatedButton(
-                onPressed: () => null,
-                child: Text('Check In'),
+                onPressed: () async {
+                  final res = await FlutterBarcodeScanner.scanBarcode(
+                    '#FFD859',
+                    'Cancel',
+                    true,
+                    ScanMode.QR,
+                  );
+                  if (res == 'Your registration has been approved!') {
+                    await checkIn(widget.event.id);
+                    Navigator.pop(context);
+                  }
+                },
+                child: _isLoading
+                    ? CircularProgressIndicator.adaptive(
+                        backgroundColor: Colors.white,
+                      )
+                    : Text('Check In'),
               )
             ],
           )),

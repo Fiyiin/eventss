@@ -93,3 +93,18 @@ export const createEvent = functions.https.onCall(async (data, context) => {
     return ({message: error, error: true});
   }
 });
+
+export const checkInUser = functions.https.onCall(async (data, context) => {
+  try {
+    await admin.firestore().collection("events").doc(data.eventId).update({
+      checked_in_users: admin.firestore.FieldValue.increment(1),
+    });
+
+    return ({
+      message: "User checked in",
+      error: false, data: data,
+    });
+  } catch (error) {
+    return ({message: error, error: true});
+  }
+});
