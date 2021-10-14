@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as nodemailer from "nodemailer";
+import * as QRCode from "qrcode";
 
 admin.initializeApp();
 
@@ -23,6 +24,10 @@ async function sendEmail(email: string, subject: string, contentPlain: string, c
   });
 
   functions.logger.info("Message sent: %s", info.messageId);
+}
+
+async function generateQR(): Promise<string> {
+  return await QRCode.toDataURL("Your registration has been approved!");
 }
 
 export const createUser = functions.https.onCall(async (data, context) => {
@@ -59,7 +64,8 @@ export const approveRegistration = functions.https.onCall(async (data, context) 
     if (data.approvalStatus == "Denied") {
       sendEmail(data.email, "Eventss Registration", "Thank you for registering on Eventss, your registration has been denied", "<b>Thank you for registering on Eventss, your registration has been denied </b>");
     } else {
-      sendEmail(data.email, "Eventss Registration", "Thank you for registering on Eventss, your registration has been approved.", "<b>Thank you for registering on Eventss, your registration is has been approved.");
+      const img = await generateQR();
+      sendEmail(data.email, "Eventss Registration", "Thank you for registering on Eventss, your registration has been approved.", "<b>Thank you for registering on Eventss, your registration is has been approved.</b><br><img src=\"" + img + "\" alt=\"QR code\" width=\"500\" height=\"600\">");
     }
 
     return ({
