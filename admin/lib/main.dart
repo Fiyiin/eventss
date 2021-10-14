@@ -3,6 +3,7 @@ import 'package:admin/users_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,14 +16,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Eventss',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.amber,
-      ),
-      home: MyHomePage(),
-    );
+    return Sizer(builder: (context, orientation, screenType) {
+      return MaterialApp(
+        title: 'Eventss',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.amber,
+        ),
+        home: MyHomePage(),
+      );
+    });
   }
 }
 
@@ -71,81 +74,91 @@ class _MyHomePageState extends State<MyHomePage> {
             child: ReactiveFormBuilder(
               form: () => form,
               builder: (context, form, child) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    ReactiveTextField(
-                      formControlName: 'email',
-                      textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.emailAddress,
-                      onSubmitted: () => form.focus('password'),
-                      validationMessages: (control) =>
-                          {ValidationMessage.required: 'Email is required'},
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Email',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('email').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.h),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      SizedBox(height: 7.h),
+                      ReactiveTextField(
+                        formControlName: 'email',
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.emailAddress,
+                        onSubmitted: () => form.focus('password'),
+                        validationMessages: (control) =>
+                            {ValidationMessage.required: 'Email is required'},
+                        decoration: Decorations.formInputDecoration.copyWith(
+                          labelText: 'Email',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              form.control('email').updateValue('');
+                            },
+                            icon: Icon(Icons.close, size: 20),
+                          ),
                         ),
                       ),
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'password',
-                      textInputAction: TextInputAction.done,
-                      obscureText: true,
-                      validationMessages: (control) =>
-                          {ValidationMessage.required: 'Password is required'},
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Password',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('password').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
+                      SizedBox(height: 5.h),
+                      ReactiveTextField(
+                        formControlName: 'password',
+                        textInputAction: TextInputAction.done,
+                        obscureText: true,
+                        validationMessages: (control) => {
+                          ValidationMessage.required: 'Password is required'
+                        },
+                        decoration: Decorations.formInputDecoration.copyWith(
+                          labelText: 'Password',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              form.control('password').updateValue('');
+                            },
+                            icon: Icon(Icons.close, size: 20),
+                          ),
                         ),
                       ),
-                    ),
-                    ReactiveFormConsumer(
-                      builder: (context, form, child) {
-                        return TextButton(
-                          style: TextButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
+                      SizedBox(height: 5.h),
+                      ReactiveFormConsumer(
+                        builder: (context, form, child) {
+                          return TextButton(
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                vertical: 20.0,
+                              ),
+                            ).copyWith(
+                              backgroundColor:
+                                  MaterialStateProperty.resolveWith(
+                                (states) {
+                                  if (states.contains(MaterialState.disabled)) {
+                                    return Colors.amber.withOpacity(0.38);
+                                  } else
+                                    return Colors.amber;
+                                },
+                              ),
+                              foregroundColor:
+                                  MaterialStateProperty.resolveWith(
+                                (states) {
+                                  if (states.contains(MaterialState.disabled)) {
+                                    return Colors.white54;
+                                  } else
+                                    return Colors.white;
+                                },
+                              ),
                             ),
-                            padding: EdgeInsets.symmetric(
-                              vertical: 20.0,
+                            onPressed:
+                                form.valid ? () => _onSubmit(form) : null,
+                            child: Text(
+                              'Login',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                          ).copyWith(
-                            backgroundColor: MaterialStateProperty.resolveWith(
-                              (states) {
-                                if (states.contains(MaterialState.disabled)) {
-                                  return Colors.amber.withOpacity(0.38);
-                                } else
-                                  return Colors.amber;
-                              },
-                            ),
-                            foregroundColor: MaterialStateProperty.resolveWith(
-                              (states) {
-                                if (states.contains(MaterialState.disabled)) {
-                                  return Colors.white54;
-                                } else
-                                  return Colors.white;
-                              },
-                            ),
-                          ),
-                          onPressed: form.valid ? () => _onSubmit(form) : null,
-                          child: Text(
-                            'Login',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 );
               },
             ),

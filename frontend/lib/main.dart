@@ -5,6 +5,7 @@ import 'package:eventss/succes_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,14 +18,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Eventss',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.amber,
-      ),
-      home: MyHomePage(),
-    );
+    return Sizer(builder: (context, orientation, screenType) {
+      return MaterialApp(
+        title: 'Eventss',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.amber,
+        ),
+        home: MyHomePage(),
+      );
+    });
   }
 }
 
@@ -103,167 +106,192 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, constraint) {
         return Scaffold(
           appBar: AppBar(
-            title: Text('Eventss'),
+            title: Text(
+              'Eventss',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
           body: SingleChildScrollView(
             child: ReactiveFormBuilder(
               form: () => form,
               builder: (context, form, child) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'Register for an event',
-                      style: TextStyle(fontSize: 26),
-                      textAlign: TextAlign.center,
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'first_name',
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: () => form.focus('lastName'),
-                      validationMessages: (control) => {
-                        ValidationMessage.required: 'First name is required'
-                      },
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'First Name',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('firstName').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      SizedBox(height: 7.h),
+                      Text(
+                        'Register for an event',
+                        style: TextStyle(fontSize: 26),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 5.h),
+                      ReactiveTextField(
+                        formControlName: 'first_name',
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: () => form.focus('lastName'),
+                        validationMessages: (control) => {
+                          ValidationMessage.required: 'First name is required'
+                        },
+                        decoration: Decorations.formInputDecoration.copyWith(
+                          labelText: 'First Name',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              form.control('firstName').updateValue('');
+                            },
+                            icon: Icon(Icons.close, size: 20),
+                          ),
                         ),
                       ),
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'last_name',
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: () => form.focus('email'),
-                      validationMessages: (control) =>
-                          {ValidationMessage.required: 'Last name is required'},
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Last Name',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('lastName').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
+                      SizedBox(height: 5.h),
+                      ReactiveTextField(
+                        formControlName: 'last_name',
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: () => form.focus('email'),
+                        validationMessages: (control) => {
+                          ValidationMessage.required: 'Last name is required'
+                        },
+                        decoration: Decorations.formInputDecoration.copyWith(
+                          labelText: 'Last Name',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              form.control('lastName').updateValue('');
+                            },
+                            icon: Icon(Icons.close, size: 20),
+                          ),
                         ),
                       ),
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'email',
-                      textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.emailAddress,
-                      onSubmitted: () => form.focus('password'),
-                      validationMessages: (control) =>
-                          {ValidationMessage.required: 'Email is required'},
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Email',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('email').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
+                      SizedBox(height: 5.h),
+                      ReactiveTextField(
+                        formControlName: 'email',
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.emailAddress,
+                        onSubmitted: () => form.focus('password'),
+                        validationMessages: (control) =>
+                            {ValidationMessage.required: 'Email is required'},
+                        decoration: Decorations.formInputDecoration.copyWith(
+                          labelText: 'Email',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              form.control('email').updateValue('');
+                            },
+                            icon: Icon(Icons.close, size: 20),
+                          ),
                         ),
                       ),
-                    ),
-                    ReactiveTextField(
-                      formControlName: 'phone_number',
-                      textInputAction: TextInputAction.done,
-                      keyboardType: TextInputType.phone,
-                      validationMessages: (control) => {
-                        ValidationMessage.required: 'Phone number is required'
-                      },
-                      decoration: Decorations.formInputDecoration.copyWith(
-                        labelText: 'Phone Number',
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            form.control('phone_number').updateValue('');
-                          },
-                          icon: Icon(Icons.close, size: 20),
+                      SizedBox(height: 5.h),
+                      ReactiveTextField(
+                        formControlName: 'phone_number',
+                        textInputAction: TextInputAction.done,
+                        keyboardType: TextInputType.phone,
+                        validationMessages: (control) => {
+                          ValidationMessage.required: 'Phone number is required'
+                        },
+                        decoration: Decorations.formInputDecoration.copyWith(
+                          labelText: 'Phone Number',
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              form.control('phone_number').updateValue('');
+                            },
+                            icon: Icon(Icons.close, size: 20),
+                          ),
                         ),
                       ),
-                    ),
-                    FutureBuilder(
-                      future: eventsRef.get(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<QuerySnapshot> snapshot) {
-                        if (snapshot.hasError) {
-                          return Center(child: Text('Couldn\'t fetch events'));
-                        }
+                      SizedBox(height: 5.h),
+                      FutureBuilder(
+                        future: eventsRef.get(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<QuerySnapshot> snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(
+                                child: Text('Couldn\'t fetch events'));
+                          }
 
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Center(child: Text("Loading..."));
-                        }
-                        final events = snapshot.data!.docs
-                            .map(
-                              (DocumentSnapshot document) => Event(
-                                document.id,
-                                (document.data()!
-                                    as Map<String, dynamic>)['name'],
-                              ),
-                            )
-                            .toList();
-                        return ReactiveDropdownField(
-                          formControlName: 'event',
-                          validationMessages: (control) => {
-                            ValidationMessage.required: 'this a required field'
-                          },
-                          items: events.map<DropdownMenuItem<Event>>((value) {
-                            return DropdownMenuItem(
-                              child: Text(value.name),
-                              value: value,
-                            );
-                          }).toList(),
-                          decoration: Decorations.formInputDecoration.copyWith(
-                            labelText: 'Events',
-                            hintText: 'Select Event',
-                          ),
-                        );
-                      },
-                    ),
-                    ReactiveFormConsumer(
-                      builder: (context, form, child) {
-                        return TextButton(
-                          style: TextButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              vertical: 20.0,
-                            ),
-                          ).copyWith(
-                            backgroundColor: MaterialStateProperty.resolveWith(
-                              (states) {
-                                if (states.contains(MaterialState.disabled)) {
-                                  return Colors.amber.withOpacity(0.38);
-                                } else
-                                  return Colors.amber;
-                              },
-                            ),
-                            foregroundColor: MaterialStateProperty.resolveWith(
-                              (states) {
-                                if (states.contains(MaterialState.disabled)) {
-                                  return Colors.white54;
-                                } else
-                                  return Colors.white;
-                              },
-                            ),
-                          ),
-                          onPressed: form.valid ? () => _onSubmit(form) : null,
-                          child: _isLoading
-                              ? CircularProgressIndicator.adaptive()
-                              : Text(
-                                  'Register',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(child: Text("Loading..."));
+                          }
+                          final events = snapshot.data!.docs
+                              .map(
+                                (DocumentSnapshot document) => Event(
+                                  document.id,
+                                  (document.data()!
+                                      as Map<String, dynamic>)['name'],
                                 ),
-                        );
-                      },
-                    ),
-                  ],
+                              )
+                              .toList();
+                          return ReactiveDropdownField(
+                            formControlName: 'event',
+                            validationMessages: (control) => {
+                              ValidationMessage.required:
+                                  'this a required field'
+                            },
+                            items: events.map<DropdownMenuItem<Event>>((value) {
+                              return DropdownMenuItem(
+                                child: Text(value.name),
+                                value: value,
+                              );
+                            }).toList(),
+                            decoration:
+                                Decorations.formInputDecoration.copyWith(
+                              labelText: 'Event',
+                              hintText: 'Select Event',
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 5.h),
+                      ReactiveFormConsumer(
+                        builder: (context, form, child) {
+                          return TextButton(
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                vertical: 20.0,
+                              ),
+                            ).copyWith(
+                              backgroundColor:
+                                  MaterialStateProperty.resolveWith(
+                                (states) {
+                                  if (states.contains(MaterialState.disabled)) {
+                                    return Colors.amber.withOpacity(0.38);
+                                  } else
+                                    return Colors.amber;
+                                },
+                              ),
+                              foregroundColor:
+                                  MaterialStateProperty.resolveWith(
+                                (states) {
+                                  if (states.contains(MaterialState.disabled)) {
+                                    return Colors.white54;
+                                  } else
+                                    return Colors.white;
+                                },
+                              ),
+                            ),
+                            onPressed:
+                                form.valid ? () => _onSubmit(form) : null,
+                            child: _isLoading
+                                ? CircularProgressIndicator.adaptive()
+                                : Text(
+                                    'Register',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
